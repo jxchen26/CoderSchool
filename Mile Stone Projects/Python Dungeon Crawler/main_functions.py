@@ -81,7 +81,7 @@ def battle():
 
     # begin battle
     while True:
-        system("clear")
+        system("cls")
 
         # display
         print("! Your were attacked by a", m_name, '! \n')
