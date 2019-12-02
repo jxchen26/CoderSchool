@@ -38,12 +38,11 @@ def show_status():
     print("current exp:", ME["exp"])
     print("Gold:", ME["money"])
 
-    print("\n")
 
-    print("====equipment====")
+    print("\n====equipment====")
     print(ME['bag'])
-    print("\n")
-    input("press enter to exit")
+
+    input("\npress enter to exit")
 
 
 def show_welcome_message():

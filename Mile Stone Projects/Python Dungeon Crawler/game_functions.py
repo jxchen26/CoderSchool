@@ -16,7 +16,6 @@ def level_up():
 
     # change level and exp
     ME["exp"] = abs(ME["exp"] - ME["exp_goal"])
-    print("my exp>", ME["exp"])
     ME["lvl"] += 1
     ME["exp_goal"] = ME['exp_goal'] * 2
 
@@ -32,7 +31,7 @@ def level_up():
     print("Atk:", ME["atk"], color.OKGREEN + "  +", n2, color.ENDC)
     print("Def:", ME["def"], color.OKGREEN + "  +", n3, color.ENDC)
     print("magic:", ME["magic"], color.OKGREEN + "  +", n4, color.ENDC)
-    print("\n")
+    print("")
 
     # increase stats
     ME["max_hp"] += n1
@@ -65,44 +64,44 @@ def increase_stats(item_name):
             ME[stat] += ITEM_DATABASE[item_name][stat]
 
 
-def calculate_reward(t1=55, t2=40, t3=5):
+def calculate_reward(t1=80, t2=15, t3=5):
     from random import choices, randint
 
     x = choices([1, 2, 3], [t1, t2, t3])
 
     if x == "1":
-        return randint(0, 400)
+        return randint(0, 200)
     elif x == "2":
-        return randint(400, 700)
+        return randint(200, 400)
     else:
-        return randint(700, 1000)
+        return randint(400, 700)
 
 
 def magic(target=None):
     from player import ME
     from random import randint
-    if ME["spells"] == []:
-        print("seems like you don't know any spells")
-        return
 
     # list a bunch of spells you can use
+    print("======spells======")
     print(ME["spells"])
 
-    spell = input("Casting.....(type in the name of spell):")
-    if spell in ME["spells"]:
+    spell = input("\nCasting.....(type in the name of spell):\n>>")
 
-        # make sure its a valid number
+    #if spell is found 
+    if spell in ME["spells"]:
+        # make sure its a number input
         try:
             guess = int(input("guess a number between 1-100:"))
         except TypeError:
-            print("YOUR SPELL MISCASTED")
+            print("You've miscast the spell")
             return
 
-        # make sure its within range
+        # make sure number is within range
         if guess > 100 or guess < 1:
-            print("YOUR SPELL MISCASTED")
+            print("You've miscast the spell")
             return
 
+        #generate random number and calculate effectiveness
         x = randint(1, 100)
 
         if x == guess:
@@ -110,11 +109,10 @@ def magic(target=None):
         else:
             e = 10 / abs(guess - x)
 
-        # look up the spell functions and pass target as paramenter
+        # look up the spell functions and pass effectiveness/target as paramenter
         from spells import SPELL_DATABASE
         SPELL_DATABASE[spell](e, target)
 
-        return
 
 
 def run():
@@ -144,4 +142,23 @@ def ruin():
         increase_stats(reward)
 
 
+def monster_defeated(monster):
+    from player import ME
+    """
+    This function entails what happends after battle 
+        - increase exp and check level
+        - reward player 
+    """
+    
+    #reward 
+    gold = calculate_reward()
+    ME["money"] += gold
+    ME["exp"] += monster["exp"]
+
+    print("The monster has been slain, well done.")
+    print("You've gained {} exp, and {} gold".format(monster["exp"], gold ))
+
+    # check if you level
+    while ME["exp"] >= ME["exp_goal"]:
+        level_up()
 

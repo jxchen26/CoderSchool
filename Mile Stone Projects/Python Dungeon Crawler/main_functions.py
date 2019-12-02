@@ -1,9 +1,14 @@
-def shop():
-    from items import SHOP, ITEM_DATABASE
-    from player import ME
-    from game_functions import increase_stats
-    from os import system
+from game_system import GAMESYS
+from player import ME
+from game_functions import *
+from items import *
+from monsters import *
+from os import system
+from random import choices, choice, randint, uniform
 
+
+
+def shop():
     while True:
         system("cls")
         print("=======Shop======= \n")
@@ -21,7 +26,7 @@ def shop():
             print("========== \n")
 
         print("your gold", ME["money"])
-        order = input("\n What you want yo buy(type in name of item or press enter to exit)\n>")
+        order = input("\n What you want yo buy(type in name of item or 'exit' to exit)\n>")
 
         if order == "exit":
             break
@@ -47,34 +52,19 @@ def shop():
 
 
 def battle():
-    from game_functions import run, magic, level_up
-    from os import system
-    from player import ME
-    from monsters import MONSTER_DATABASE, l1, l2, l1b, l2b
-    from random import uniform, choice
-    from game_system import GAMESYS
+    # get monster (higher days = higher chance of encountering stronger monsters)
+    level = choices([l1,l2,l3][160/GAMESYS["difficulty"], 2*GAMESYS["difficulty"], 1*GAMESYS["difficulty"]])
+    m_name = choice(level[0])
 
-    # get monster
-    if GAMESYS["difficulty"] == 1 and GAMESYS["day"] < 10:
-        m_name = choice(l1)
-    elif GAMESYS["difficulty"] == 2 and 10 < GAMESYS["day"] < 20:
-        m_name = choice(l2)
-    elif GAMESYS["difficulty"] == 3 and 20 < GAMESYS["day"] < 30:
-        m_name = choice(l3)
 
     # check boss date
     if GAMESYS["day"] == 10:
         m_name = l1b
-        GAMESYS["difficulty"] += 1
     elif GAMESYS["day"] == 20:
-        GAMESYS["difficulty"] += 1
         m_name = l2b
     # elif GAMESYS["day"]==30:
     #   m_name = l3b
-    elif GAMESYS["difficulty"] == 3:
-        print("GAME BEATEN")
-        quit()
-
+ 
     # get a copy of the monster data
     m = MONSTER_DATABASE[m_name].copy()
     m_hp = m["hp"]
@@ -86,39 +76,25 @@ def battle():
         # display
         print("! Your were attacked by a", m_name, '! \n')
         print("your health:", "\033[92m" + "█" * int(10 * (ME["hp"] / ME["max_hp"])), ME["hp"], '\033[0m')
-        print(m_name, "health:", "\033[92m" + "█" * int(10 * (m["hp"] / m_hp)), m["hp"], '\033[0m')
-        print("")
+        print(m_name, "health:", "\033[92m" + "█" * int(10 * (m["hp"] / m_hp)), m["hp"], '\033[0m','\n')
 
         # player turn
-        action = input("1.attack ({}-{}), 2.magic, 3.run >".format(int(ME["atk"] * 0.5), int(ME["atk"] * 1)))
+        action = input("1.attack ({}-{}), 2.magic, 3.run\n>>".format(int(ME["atk"] * 0.5), int(ME["atk"] * 1)))
+        #attack
         if action == "1":
             dmg = int(ME["atk"] * uniform(.5, 1))
-            print("you hit", m_name, "for", dmg)
+            print("\nyou hit", m_name, "for", dmg)
             m["hp"] -= dmg
-
-            # check if you've defeated the monster
             if m["hp"] <= 0:
-                print("The monster has been slain, well done.")
-                ME["exp"] += m["exp"]
-
-                # check if you leved!
-                while ME["exp"] >= ME["exp_goal"]:
-                    level_up()
-
+                monster_defeated(m)
                 break
 
         # magic
         elif action == "2":
             magic(m)
             if m["hp"] <= 0:
-                print("the monster has been slain. well done.")
-
-                if ME["exp"] >= ME["exp_goal"]:
-                    level_up()
-
+                monster_defeated(m)
                 break
-
-
 
         # run
         elif action == "3":
@@ -127,7 +103,6 @@ def battle():
                 break
             else:
                 print("THE MONSTER CAUGHT UP TO YOU, your attempt at escaping failed.")
-
         else:
             print("There is no", action, "command")
 
@@ -135,8 +110,10 @@ def battle():
         m_dmg = int(m["atk"] * uniform(0, 1) - ME["def"] * uniform(0, 1))
         if m_dmg < 0:
             m_dmg = 0
-        print("the monster hit you for", m_dmg)
+        print("the monster hit you for", m_dmg, '\n')
         ME["hp"] -= m_dmg
+
+        #if player defeated
         if ME["hp"] <= 0:
             print("You've been slained by", m_name, "game over.")
 
@@ -145,21 +122,16 @@ def battle():
             GAMESYS["state"] = "Over"
             return
 
-        input("enter to continue")
+        input("\nenter to continue onto next turn")
 
 
 def explore():
-    from player import ME
-    from game_functions import calculate_reward, ruin
-    from random import choices, randint
-    from game_system import GAMESYS
 
     event = choices(["nothing happens", "encounter monster", "discover ruin", "encounter trap", "discover secret"],
                     [20, 55, 5, 15, 5])
 
     if event == ["nothing happens"]:
         print("It seems you made it through the day without encountering any monster")
-
         reward = calculate_reward()
         print("You've found", reward, "gold")
 
